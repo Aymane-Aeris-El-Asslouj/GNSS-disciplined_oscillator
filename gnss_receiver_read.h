@@ -1,0 +1,1 @@
+void gnss_receiver_read(uint8_t rx_pin_number);

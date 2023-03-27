@@ -16,8 +16,9 @@ int alarm_period = TIMER_RESOLUTION * 1;
 int captured_time_points = 0;
 int old_err = 0;
 int i_err = 0;
-static bool IRAM_ATTR my_alarm (gptimer_handle_t timer, const gptimer_alarm_event_data_t *edata, void *user_ctx){
 
+static bool IRAM_ATTR my_alarm (gptimer_handle_t timer, const gptimer_alarm_event_data_t *edata, void *user_ctx)
+{
     // Count the number of time points received
     if (captured_time_points < MINIMUM_SAMPLES_FOR_TUNING)
         captured_time_points++;
@@ -28,12 +29,13 @@ static bool IRAM_ATTR my_alarm (gptimer_handle_t timer, const gptimer_alarm_even
     int d_err = err - old_err;
     old_err = err;
 
-
     // Adjust frequency if there are at least 2 gnss pps time points
-    if(captured_time_points == MINIMUM_SAMPLES_FOR_TUNING)
-    {
+    if (captured_time_points == MINIMUM_SAMPLES_FOR_TUNING){
 
         alarm_period += d_err/a+err/b +i_err/c;
+
+        gptimer_set_raw_count(timer, alarm_period);
+
         gptimer_alarm_config_t alarm_config = {
             .alarm_count = 0, 
             .reload_count = alarm_period, 
@@ -48,7 +50,6 @@ static bool IRAM_ATTR my_alarm (gptimer_handle_t timer, const gptimer_alarm_even
 // Initialize 1PPS timer
 void timer_PPS_init()
 {
-
     // Set timer to have maximum resolution counting down
     gptimer_config_t config =  {
         .resolution_hz = TIMER_RESOLUTION,
@@ -72,13 +73,14 @@ void timer_PPS_init()
     };
     gptimer_register_event_callbacks(pps_timer_handle, &cbs, NULL);
 
+    // enable timer
+    gptimer_enable(pps_timer_handle);
 }
 
 // Start timer
 void timer_pps_start_timer()
 {
     // Start timer
-    gptimer_enable(pps_timer_handle);
     gptimer_start(pps_timer_handle);
 }
 
@@ -100,5 +102,6 @@ int time_counter = 0;
 // Print alarm period
 void print_alarm_period()
 {
-    printf("%d - alarm period: %d,      int_err: %d                         ", time_counter++, alarm_period, i_err);
+    if (captured_time_points > 0)
+        printf("%d - &alarm period: &%d&,      int_err: %d     $old_err: %d$     ", time_counter++, alarm_period, i_err, old_err);
 }

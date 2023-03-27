@@ -17,13 +17,11 @@ bool first_pulse = true;
 void IRAM_ATTR pps_posedge_handler(void *arg)
 {
     // start timer if this is the first pulse
-    if (first_pulse)
-    {
+    if (first_pulse){
         first_pulse = false;
         timer_pps_start_timer();
         return;
     }
-
 
     // Get phase offset
     int new_gnss_pps_time_point = timer_pps_get_time();
@@ -41,7 +39,7 @@ void IRAM_ATTR pps_posedge_handler(void *arg)
 // Initialize gnss pps input handler
 void GNSS_PPS_init()
 {
-    
+
     // Set PPS pin as pull-up input with posedge interrupt
     gpio_reset_pin(PPS_PIN);
     gpio_set_direction(PPS_PIN, GPIO_MODE_INPUT);
@@ -51,8 +49,6 @@ void GNSS_PPS_init()
     // Add the pps posedge handler to the pps pin
     ESP_ERROR_CHECK(gpio_install_isr_service(ESP_INTR_FLAG_LEVEL1));
     ESP_ERROR_CHECK(gpio_isr_handler_add(PPS_PIN, pps_posedge_handler, NULL));
-
-
 }
 
 // print gnss time offset information
